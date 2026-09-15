@@ -1,0 +1,66 @@
+CREATE DATABASE PERSONALES2
+ON PRIMARY 
+
+(
+	NAME = Personales_Data,
+	FILENAME = 'C:\BDI\PERSONALES2.mdf',
+	SIZE = 20MB,
+	MAXSIZE = 70MB,
+	FILEGROWTH = 10%
+	), 
+
+	(
+	
+	NAME = Personales_Data1,
+	FILENAME = 'C:\BDI\PERSONALES_Data_1.mdf',
+	SIZE = 20MB,
+	MAXSIZE = unlimited, --MAXSIZE = 70MB,
+	FILEGROWTH = 10%
+	
+	),
+
+	FILEGROUP TABLAS 
+	(
+
+	NAME = Personales_Data2,
+	FILENAME = 'C:\BDI\PERSONALES_Data_2.mdf',
+	SIZE = 30MB,
+	MAXSIZE = 70MB,
+	FILEGROWTH = 20%
+
+
+
+	)
+
+LOG ON
+(
+
+	NAME = Personales2_Log,
+	FILENAME = 'C:\BDI\PERSONALES2.ldf',
+	SIZE = 10MB,
+	MAXSIZE = 40MB,
+	FILEGROWTH = 2MB
+
+);
+
+
+ALTER DATABASE PERSONALES2
+ADD FILE 
+(
+	NAME = Personales_Data3,
+	FILENAME = 'C:\BDI\PERSONALES_Data_3.mdf',
+	SIZE = 30MB,
+	MAXSIZE = 70MB,
+	FILEGROWTH = 20% 
+
+	)
+TO FILEGROUP TABLAS; 
+
+ALTER DATABASE PERSONALES2
+MODIFY FILE (
+	NAME = 'Personales_Data3',
+	NEWNAME = 'Personales_Data4'
+);
+
+ALTER DATABASE PERSONALES2
+REMOVE FILE Personales_Data4;

@@ -1,0 +1,24 @@
+CREATE DATABASE PERSONALES
+ON PRIMARY 
+
+(
+	NAME = Personales_Data,
+	FILENAME = 'C:\BDI\PERSONALES_JD.mdf',
+	SIZE = 20MB,
+	MAXSIZE = 70MB,
+	FILEGROWTH = 10%
+)
+LOG ON
+(
+
+	NAME = Personales_Log,
+	FILENAME = 'C:\BDI\PERSONALES_JD.ldf',
+	SIZE = 10MB,
+	MAXSIZE = 40MB,
+	FILEGROWTH = 2MB
+
+);
+
+----------------------
+
+DROP DATABASE PERSONALES;
