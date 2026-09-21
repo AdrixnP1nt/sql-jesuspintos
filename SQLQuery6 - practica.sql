@@ -1,0 +1,188 @@
+CREATE DATABASE PRUEBA
+ON PRIMARY
+(
+	NAME = Prueba_Data,
+	FILENAME = 'C:\DBI\PRUEBA\Prueba_Data.mdf',
+	SIZE = 50MB,
+	MAXSIZE = 120MB,
+	FILEGROWTH = 5%
+),
+(
+	NAME = Prueba_Data2,
+	FILENAME = 'C:\DBI\PRUEBA\Prueba_Data2.mdf',
+	SIZE = 50MB,
+	MAXSIZE = 90MB,
+	FILEGROWTH = 15MB
+),
+FILEGROUP TABLAS
+(
+	NAME = Tablas_Prueba_Data,
+	FILENAME = 'C:\DBI\PRUEBA\Tablas_Prueba_Data.mdf',
+	SIZE = 60MB,
+	MAXSIZE = 200MB,
+	FILEGROWTH = 5%
+),
+(
+	NAME = Tablas_Prueba_Data2,
+	FILENAME = 'C:\DBI\PRUEBA\Tablas_Prueba_Data2.mdf',
+	SIZE = 60MB,
+	MAXSIZE = 200MB,
+	FILEGROWTH = 5%
+)
+LOG ON
+(
+	NAME = Prueba_Log,
+	FILENAME = 'C:\DBI\PRUEBA\Prueba_Log.ldf',
+	SIZE = 50MB,
+	MAXSIZE = 120MB,
+	FILEGROWTH = 4%
+),
+(
+	NAME = Prueba_Log2,
+	FILENAME = 'C:\DBI\PRUEBA\Prueba_Log2.ldf',
+	SIZE = 25MB,
+	MAXSIZE = 60MB,
+	FILEGROWTH = 2%
+	
+);
+
+
+CREATE TYPE ID FROM INT NOT NULL;
+
+CREATE TABLE CLIENTE
+(
+	idCliente ID UNIQUE IDENTITY(1,1),
+	CedulaIdentidad VARCHAR(20) UNIQUE NOT NULL,
+	Nombres VARCHAR(50) NOT NULL,
+	Apellidos VARCHAR(50) NOT NULL,
+	Fecha_Nacimiento DATE NOT NULL,
+	Telefono VARCHAR(20) NOT NULL,
+	CorreoElectronico VARCHAR(50),
+	Direccion VARCHAR(150)
+	CONSTRAINT PK_Cliente PRIMARY KEY CLUSTERED(IdCliente)
+)
+
+CREATE TABLE SUCURSAL
+(
+	IdSucursal ID IDENTITY(1,1),
+	Nombre VARCHAR(100) NOT NULL,
+	Direccion VARCHAR(150) NOT NULL,
+	Ciudad VARCHAR(50),
+	Telefono VARCHAR(20)
+	CONSTRAINT PK_Sucursal PRIMARY KEY CLUSTERED (IdSucursal)
+)
+
+CREATE TABLE EMPLEADO
+(
+	IdEmpleado ID IDENTITY(1,1),
+	Cedula VARCHAR(20) UNIQUE NOT NULL,
+	Nombres VARCHAR(50) NOT NULL,
+	Apellidos VARCHAR(50) NOT NULL,
+	Cargo VARCHAR(50) NOT NULL,
+	Salario DECIMAL(15,2) NOT NULL,
+	FechaIngreso DATE NOT NULL,
+	IdSucursal ID
+	CONSTRAINT PK_Empleado PRIMARY KEY CLUSTERED(IdEmpleado),
+	CONSTRAINT FK_Sucursal_Empleado FOREIGN KEY (IdSucursal) REFERENCES dbo.SUCURSAL(IdSucursal)
+)
+
+CREATE SEQUENCE sec_numero_cuenta START WITH 1 INCREMENT BY 1;
+CREATE TABLE CUENTA
+(
+	IdCuenta ID IDENTITY(1,1),
+	NumeroCuenta VARCHAR(30) UNIQUE NOT NULL DEFAULT ('N.Cta-' + RIGHT('00000000' + CAST(NEXT VALUE FOR sec_numero_cuenta AS VARCHAR(8)),8)),
+	TipoCuenta VARCHAR(30) NOT NULL,
+	Saldo DECIMAL(15,2) DEFAULT(0.00),
+	FechaApertura DATE NOT NULL,
+	Estado VARCHAR(20),
+	IdCliente ID,
+	IdSucursal ID
+	CONSTRAINT PK_Cuenta PRIMARY KEY CLUSTERED(IdCuenta),
+	CONSTRAINT FK_Cliente_Cuenta FOREIGN KEY(IdCliente) REFERENCES dbo.CLIENTE(IdCliente),
+	CONSTRAINT FK_Sucursal_Cuenta FOREIGN KEY(IdSucursal) REFERENCES dbo.SUCURSAL(IdSucursal)
+)
+
+CREATE TABLE MOVIMIENTO
+(
+	IdMovimiento ID IDENTITY(1,1),
+	FechaMovimiento DATETIME NOT NULL,
+	TipoMovimiento VARCHAR(30) NOT NULL,
+	Monto DECIMAL(15,2) NOT NULL,
+	Descripcion VARCHAR(200),
+	IdCuenta ID,
+	CONSTRAINT PK_Movimiento PRIMARY KEY CLUSTERED (IdMovimiento),
+	CONSTRAINT FK_Cuenta_Movimiento FOREIGN KEY (IdCuenta) REFERENCES dbo.CUENTA(IdCuenta)
+)
+
+CREATE TABLE PRESTAMO
+(
+	IdPrestamo ID IDENTITY(1,1),
+	Monto DECIMAL(15,2) NOT NULL,
+	TasaIntereses DECIMAL(5,2) NOT NULL,
+	PlazoMeses INT NOT NULL,
+	FechaSolicitud DATE NOT NULL,
+	FechaAprobacion DATE,
+	Estado VARCHAR(30),
+	IdCliente ID,
+	IdEmpleado ID,
+	CONSTRAINT PK_Prestamo PRIMARY KEY CLUSTERED(IdPrestamo),
+	CONSTRAINT FK_Cliente_Prestamo FOREIGN KEY (IdCliente) REFERENCES dbo.CLIENTE(IdCliente),
+	CONSTRAINT FK_Empleado_Prestamo FOREIGN KEY (IdEmpleado) REFERENCES dbo.EMPLEADO(IdEmpleado)
+)
+
+CREATE TABLE CUOTA
+(
+	IdCuota ID IDENTITY(1,1),
+	NumeroCuota INT  NOT NULL,
+	MontoCuota DECIMAL(15,2) NOT NULL,
+	FechaVencimiento DATE NOT NULL,
+	FechaPago DATE ,
+	Estado VARCHAR(20),
+	IdPrestamo ID
+	CONSTRAINT PK_Cuota PRIMARY KEY CLUSTERED (IdCuota),
+	CONSTRAINT Uq_Cuota UNIQUE (IdPrestamo, NumeroCuota),
+	CONSTRAINT FK_Prestamo_Cuota FOREIGN KEY (IdPrestamo) REFERENCES dbo.PRESTAMO(IdPrestamo)
+)
+
+CREATE SEQUENCE sec_nro_tarjeta START WITH 2026100540 INCREMENT BY 1;
+
+CREATE TABLE TARJETA
+(
+	IdTarjeta ID IDENTITY(1,1),
+	NumeroTarjeta VARCHAR(20) UNIQUE NOT NULL DEFAULT ('BT-' + CAST(NEXT VALUE FOR sec_nro_tarjeta AS VARCHAR(10))),
+	TipoTarjeta VARCHAR(30) NOT NULL,
+	FechaEmision DATE NOT NULL,
+	FechaVencimiento DATE NOT NULL,
+	LimiteCredito DECIMAL(15,2),
+	Estado VARCHAR(20),
+	IdCuenta ID
+	CONSTRAINT PK_Tarjeta PRIMARY KEY CLUSTERED (IdTarjeta),
+	CONSTRAINT FK_Cuenta_Tarjeta FOREIGN KEY (IdCuenta) REFERENCES dbo.CUENTA(IdCuenta)
+)
+
+CREATE TABLE BENEFICIARIO
+(
+	IdBeneficio ID IDENTITY(1,1),
+	Nombres VARCHAR(50) NOT NULL,
+	Apellidos VARCHAR(50) NOT NULL,
+	CedulaIdentidad VARCHAR(20) UNIQUE NOT NULL,
+	Banco VARCHAR(100) NOT NULL,
+	NumeroCuenta VARCHAR(30) NOT NULL,
+	IdCliente ID
+	CONSTRAINT PK_Beneficiario PRIMARY KEY CLUSTERED (IdBeneficio),
+	CONSTRAINT FK_Cliente_Beneficio FOREIGN KEY (IdCliente) REFERENCES dbo.CLIENTE(IdCliente)
+)
+
+CREATE TABLE TRANSFERENCIA
+(
+	IdTransferencia ID IDENTITY(1,1),
+	FechaTransferencia DATE NOT NULL,
+	Monto DECIMAL(15,2) NOT NULL,
+	Concepto VARCHAR(200) NOT NULL,
+	Estado VARCHAR(20),
+	IdCuentaOrigen ID,
+	IdBeneficiario ID
+	CONSTRAINT PK_Transferencia PRIMARY KEY CLUSTERED (IdTransferencia),
+	CONSTRAINT FK_Cuenta_Transferencia FOREIGN KEY (IdCuentaOrigen) REFERENCES dbo.CUENTA(IdCuenta),
+	CONSTRAINT FK_Beneficiario_Transferencia FOREIGN KEY (IdBeneficiario) REFERENCES dbo.BENEFICIARIO(IdBeneficio)
+)
