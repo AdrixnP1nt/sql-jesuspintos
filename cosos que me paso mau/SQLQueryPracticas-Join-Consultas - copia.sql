@@ -1,5 +1,5 @@
---SELECT *
---	FROM Cliente;
+SELECT *
+	FROM Cliente;
 
 SELECT Codigo_Cliente AS ID, CI, Nombre_Completo
 FROM Cliente;
@@ -7,6 +7,7 @@ FROM Cliente;
 SELECT Codigo_Cliente AS ID, CI, Nombre_Completo
 FROM Cliente
 ORDER BY Nombre_Completo ASC; --DESC
+
 
 SELECT Codigo_Cliente AS ID, CI, Nombre_Completo
 FROM Cliente
@@ -107,35 +108,54 @@ SELECT *
 
 -- APDEIT
 UPDATE Cuenta_Ahorro
- SET Saldo_Actual = 0
+ SET Saldo_Actual =0
  WHERE Numero_Cuenta = 'CA-8015-L';
 
 --DILIT
 DELETE FROM Cuenta_Ahorro WHERE Numero_Cuenta = 'CA-8015-L';
 
 
- SELECT *
- FROM Cliente
- WHERE DIRECCION LIKE '%Capiatá'
+select * --CI, Nombre_Completo
+from Cliente Cli
+where CI = '5.444,333'
 
- SELECT A.Codigo_Cliente,B.CI,B.Nombre_Completo
- FROM Cuenta_Corriente A
- INNER JOIN Cliente B ON A.Codigo_Cliente = B.Codigo_Cliente
- WHERE A.Codigo_Cliente = 6;
+select * --CI, Nombre_Completo
+from Cliente Cli
+where Direccion like '%Capiatá%' --Sirve para buscar por referencia de la oracion
 
- SELECT B.Codigo_Cliente, B.CI,B.Nombre_Completo,A.Saldo_Actual
- FROM Cuenta_Corriente A, Cliente B
- WHERE A.Codigo_Cliente = B.Codigo_Cliente
- AND A.Codigo_Cliente = 6;
- ---------------------------
- 
-SELECT *
-FROM Cliente
+/*SALDO ACTUAL DEL CLIENTE CON CODIGO 6*/
+select *
+from Cuenta_Corriente
 
-SELECT B.*,A.Saldo_Actual
-FROM Cuenta_Corriente A
-RIGHT JOIN Cliente B ON A.Codigo_Cliente = B.Codigo_Cliente
-WHERE A.Codigo_Cliente = B.Codigo_Cliente
+SELECT CLI.Codigo_Cliente,CLI.CI,
+CLI.Nombre_Completo, CTA.Saldo_Actual
+FROM Cuenta_Corriente CTA
+	INNER JOIN Cliente CLI ON CTA.Codigo_Cliente = CLI.Codigo_Cliente
+WHERE CTA.Codigo_Cliente = 6
 
-SELECT *
-FROM Cuenta_Ahorro
+----
+
+SELECT CLI.Codigo_Cliente,CLI.CI,
+CLI.Nombre_Completo, CTA.Saldo_Actual
+FROM Cuenta_Corriente CTA
+	INNER JOIN Cliente CLI ON CTA.Codigo_Cliente = CLI.Codigo_Cliente
+WHERE CTA.Codigo_Cliente = 6
+
+
+SELECT CLI.Codigo_Cliente,CLI.CI,
+CLI.Nombre_Completo, CTA.Saldo_Actual
+FROM Cuenta_Corriente CTA, Cliente CLI
+	WHERE CTA.Codigo_Cliente = CLI.Codigo_Cliente
+ AND CTA.Codigo_Cliente = 6
+
+ select * 
+from Cliente Cli;
+/* VERIFICAR SI TODOS LOS CLIENTES TIENEN CTA CORRIENTES */
+SELECT CLI.*, CTA.Saldo_Actual
+FROM Cuenta_Corriente CTA, Cliente CLI
+	WHERE CTA.CODIGO_Cliente = CTA.Codigo_Cliente
+
+	SELECT CLI.*, CTA.Saldo_Actual
+FROM Cuenta_Corriente CTA
+	LEFT JOIN CLIENTE CLI 
+	ON CTA.Codigo_Cliente = CLI.Codigo_Cliente
