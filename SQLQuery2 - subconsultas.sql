@@ -164,12 +164,13 @@ SELECT * FROM ORDEN_TRABAJO
 
 SELECT *
 FROM(
-	SELECT FORMAT(FechaIngreso, 'yyyy-MM')AnioMes, 
-		   SUM(ManoObra)ManoObra
+	SELECT ManoObra, FORMAT(FechaIngreso, 'yyyy-MM')AnioMes, 
+		   AVG(ManoObra)PromedioManoObra
 	FROM ORDEN_TRABAJO
-	GROUP BY FORMAT(FechaIngreso, 'yyyy-MM')
+	GROUP BY ManoObra, FORMAT(FechaIngreso, 'yyyy-MM')
 ) A 
-WHERE A.AnioMes = '2026-02';
+WHERE A.AnioMes = '2026-01'
+AND ManoObra > A.PromedioManoObra;
 -- EJERCICIO 2
 SELECT *
 FROM(
@@ -265,6 +266,182 @@ FROM ORDEN_TRABAJO O
 WHERE C.IdProveedor = 3
 AND T.Especialidad = 'Chapa y Pintura'
 
-SELECT TOP 5 *
-FROM ORDEN_TRABAJO O
-WHERE IdOrden IN(SELECT)
+/*==============================================================
+			PROCESO DE BASE DE DATOS - SUBCONSULTAS
+===============================================================*/
+-- EJERCICIO 1
+SELECT IdOrden, FechaIngreso, DescripcionDiagnostico
+FROM ORDEN_TRABAJO,
+(
+	SELECT AVG(ManoObra)PromedioGral FROM ORDEN_TRABAJO
+) B
+WHERE FechaIngreso LIKE '2026-01%'
+AND ManoObra > B.PromedioGral;
+--EJERCICIO 2
+SELECT * FROM VEHICULO
+SELECT * FROM ORDEN_TRABAJO
+SELECT * FROM CLIENTE
+
+SELECT V.Modelo, V.Matricula
+FROM VEHICULO V
+	JOIN ORDEN_TRABAJO O ON O.IdVehiculo = V.IdVehiculo
+WHERE FORMAT(O.FechaIngreso, 'dd/MM/yyyy') LIKE '%03/2026'
+AND V.IdCliente IN(
+	SELECT IdCliente
+	FROM VEHICULO V2
+		JOIN ORDEN_TRABAJO O2 ON O2.IdVehiculo = V2.IdVehiculo
+	GROUP BY V2.IdCliente
+	HAVING 
+		COUNT(O2.IdOrden) > 1
+)
+
+-- EJERCICIO 3
+SELECT * FROM ORDEN_REPUESTO
+SELECT * FROM ORDEN_TRABAJO
+
+SELECT
+	OT.IdOrden,
+	OT.FechaIngreso,
+	OT.DescripcionDiagnostico,
+	SUM(O.Cantidad * O.PrecioVenta)TotalVentas
+FROM ORDEN_TRABAJO OT
+	JOIN ORDEN_REPUESTO O ON O.IdOrden = OT.IdOrden
+WHERE DATEDIFF(DAY, OT.FechaIngreso, '2026-03-15') > 45
+AND OT.FechaIngreso <= '2026-03-15'
+GROUP BY OT.IdOrden,OT.FechaIngreso, OT.DescripcionDiagnostico
+HAVING SUM(O.Cantidad * O.PrecioVenta) > (SELECT AVG(PrecioCosto) FROM REPUESTOS)
+
+-- EJERCICIO 4
+
+SELECT Nombre, Especialidad
+FROM TALLER
+WHERE IdTaller NOT IN(
+	SELECT IdTaller
+	FROM ORDEN_TRABAJO	
+	WHERE FechaIngreso BETWEEN '2026-02-15' AND '2026-02-28'
+)
+
+-- EJERCICIO 5
+
+SELECT Nombre, StockDisponible
+FROM REPUESTOS R
+	JOIN ORDEN_REPUESTO O ON O.IdRepuesto = R.IdRepuesto
+	JOIN ORDEN_TRABAJO OT ON OT.IdOrden = O.IdOrden
+WHERE OT.FechaIngreso <= DATEADD(MONTH, -1, (SELECT MAX(FechaIngreso) FROM ORDEN_TRABAJO))
+ 
+ -- EJERCICIO 6
+ 
+ SELECT DISTINCT Nombre,Apellido,NroTelefono
+ FROM CLIENTE
+ WHERE idCliente IN(
+	SELECT IdCliente 
+	FROM VEHICULO
+	WHERE Anho > 2016 
+	AND IdVehiculo IN(
+		SELECT idVehiculo
+		FROM ORDEN_TRABAJO
+		WHERE DATEPART(QUARTER, FechaIngreso) = 1
+	)
+ )
+
+ -- EJERCICIO 7
+
+SELECT 
+	OT.IdOrden,
+	SUM(ORep.Cantidad * ORep.PrecioVenta) AS TotalVentas
+FROM ORDEN_TRABAJO OT
+	JOIN ORDEN_REPUESTO ORep ON ORep.IdOrden = OT.IdOrden
+WHERE YEAR(OT.FechaIngreso) = 2026
+AND MONTH(OT.FechaIngreso) = 2
+GROUP BY OT.IdOrden, OT.ManoObra
+HAVING SUM(ORep.Cantidad * ORep.PrecioVenta) > OT.ManoObra
+
+-- EJERCICIO 8
+SELECT * FROM ORDEN_TRABAJO
+SELECT * FROM ORDEN_REPUESTO
+SELECT * FROM REPUESTOS
+
+SELECT DISTINCT RazonSocial, Email
+FROM PROVEEDOR
+WHERE IdProveedor IN(
+	SELECT IdProveedor
+	FROM REPUESTOS
+	WHERE StockDisponible > 0
+	AND IdRepuesto IN(
+		SELECT IdRepuesto
+		FROM ORDEN_REPUESTO
+		WHERE IdOrden IN(
+			SELECT IdOrden
+			FROM ORDEN_TRABAJO
+			WHERE Estado = 'Completado'
+			AND MONTH(FechaIngreso) = 1
+			AND DAY(FechaIngreso) BETWEEN 1 AND 31
+		)
+	)
+)
+SELECT * FROM ORDEN_TRABAJO
+SELECT * FROM VEHICULO
+-- EJERCICIO 9
+UPDATE ORDEN_TRABAJO
+SET Estado = 'En Proceso'
+WHERE Estado = 'Pendiente'
+AND FechaIngreso < '2026-03-01'
+AND IdVehiculo IN(
+	SELECT IdVehiculo
+	FROM VEHICULO
+	WHERE Modelo LIKE 'Toyota%'
+)
+
+-- EJERCICIO 10
+UPDATE ORDEN_TRABAJO
+SET ManoObra = CAST(ManoObra * 1.10 AS INT)
+WHERE YEAR(FechaIngreso) = 2026
+AND MONTH(FechaIngreso) = 3
+AND IdTaller IN(
+	SELECT TOP 1 IdTaller
+	FROM ORDEN_TRABAJO
+	GROUP BY IdTaller
+	ORDER BY COUNT(IdVehiculo) DESC
+)
+
+-- EJERCICIO 11
+SELECT COUNT(FechaIngreso)CantidadDeOrdenes
+FROM ORDEN_TRABAJO
+WHERE (DescripcionDiagnostico LIKE '%Falla%' OR DescripcionDiagnostico LIKE '%Pérdida%')
+AND YEAR(FechaIngreso) = 2026
+AND MONTH(FechaIngreso) = 1
+AND IdOrden IN(
+	SELECT IdOrden
+	FROM ORDEN_REPUESTO
+	GROUP BY IdOrden
+	HAVING SUM(Cantidad) > 1
+)
+
+--EJERCICIO 12
+UPDATE ORDEN_TRABAJO
+SET ManoObra = ManoObra - 50000
+WHERE FechaIngreso > '2026-03-01'
+AND ManoObra >= 50000
+AND IdVehiculo IN(
+	SELECT IdVehiculo
+	FROM VEHICULO
+	WHERE Anho < 2015
+)
+
+-- EJERCICIO 13
+UPDATE ORDEN_TRABAJO
+SET Estado = 'Completado'
+WHERE FechaIngreso BETWEEN '2026-01-1' AND '2026-03-31'
+AND IdTaller IN(
+	SELECT OT.Idtaller
+	FROM ORDEN_TRABAJO OT
+		JOIN ORDEN_REPUESTO O ON OT.IdOrden = O.IdOrden
+		JOIN REPUESTOS R ON O.IdRepuesto = R.IdRepuesto
+		JOIN PROVEEDOR P ON R.IdProveedor = P.IdProveedor
+	GROUP BY OT.IdTaller
+	HAVING COUNT(DISTINCT P.IdProveedor) = 1
+	AND MAX(P.RUC) = '80000001-0'
+)
+
+
+

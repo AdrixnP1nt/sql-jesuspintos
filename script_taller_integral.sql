@@ -344,3 +344,4 @@ FROM CLIENTE A
   JOIN VEHICULO B ON A.IdCliente = B.IdCliente
   JOIN ORDEN_TRABAJO C ON B.IdVehiculo = C.IdVehiculo
   LEFT JOIN TALLER D ON C.IdTaller = D.IdTaller
+
